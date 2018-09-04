@@ -1,3 +1,7 @@
 /.idea
 /docs
-/log-analyzer/reports
+/log-analyzer/reports/*
+!/log-analyzer/reports/.gitkeep
+/log-analyzer/tests/reports/*
+!/log-analyzer/tests/reports/.gitkeep
+/log-analyzer/parser.log
