@@ -153,25 +153,25 @@ def get_report_file_path(log_file, report_dir):
 
 def run(config):
     init_logging(config.get('LOGGING_FILE_PATH'))
+    logging.info('Start analyzer')
     log_dir = config.get('LOG_DIR')
     log_file = get_last_log_file(log_dir)
     if not log_file:
-        logging.error('No nginx log file found in directory: "{}"'.format(log_dir))
+        logging.error('No nginx log file was found in directory: "{}"'.format(log_dir))
         return
+    logging.info('Last nginx log file was found: "{}"'.format(log_file.path))
     report_file_path = get_report_file_path(log_file, config.get('REPORT_DIR'))
     if os.path.isfile(report_file_path):
-        logging.info('Report file "{}" already exists'.format(report_file_path))
+        logging.info('Report file "{}" already exists. Aborting'.format(report_file_path))
         return
 
     report_data = defaultdict(list)
-    try:
-        for parsed_line in parse_file(log_file.path, config.get('ERROR_LIMIT', 100)):
-            report_data[parsed_line['path']].append(float(parsed_line['request_time']))
-    except RuntimeError as e:
-        raise RuntimeError(str(e))
+    for parsed_line in parse_file(log_file.path, config.get('ERROR_LIMIT', 100)):
+        report_data[parsed_line['path']].append(float(parsed_line['request_time']))
 
     report_data = get_calculated_report_data(report_data, config.get('REPORT_SIZE'), config.get('REPORT_PRECISION'))
     save_report(report_data, report_file_path, config.get('REPORT_TEMPLATE_PATH'))
+    logging.info('Report was successfully saved: "{}"'.format(report_file_path))
 
 
 def main():
