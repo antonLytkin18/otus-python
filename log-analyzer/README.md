@@ -1,7 +1,7 @@
 **Running log analyzer**
 
-`python log_analyzer.py --config=config.json`
+`python3 log_analyzer.py --config=config.json`
 
 **Running tests**
 
-`python -m unittest tests/test_basic`
+`python3 -m unittest tests.test_basic`
