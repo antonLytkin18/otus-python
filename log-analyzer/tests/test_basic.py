@@ -36,7 +36,7 @@ class TestLogAnalyzer(TestCase):
         LogFile = namedtuple('LogFile', ['path', 'date'])
         mocked_log_file.return_value = LogFile('./tests/fixtures/log/invalid.log', datetime.datetime.now())
 
-        with self.assertRaises(BaseException):
+        with self.assertRaises(RuntimeError):
             run({
                 'REPORT_SIZE': 20,
                 'REPORT_DIR': './tests/reports',
