@@ -129,13 +129,13 @@ def init_logging(file_name=None):
     )
 
 
-def get_config(default_config):
+def get_config_file():
     args = get_args()
+    return args.config if args and args.config else None
 
-    if not (args and args.config):
-        return default_config
-    config_file_path = args.config
 
+def get_config(default_config):
+    config_file_path = get_config_file()
     if not os.path.isfile(config_file_path):
         raise FileNotFoundError('Config file not found: "{}"'.format(config_file_path))
     try:
