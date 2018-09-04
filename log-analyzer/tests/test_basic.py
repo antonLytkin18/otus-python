@@ -36,13 +36,14 @@ class TestLogAnalyzer(TestCase):
         LogFile = namedtuple('LogFile', ['path', 'date'])
         mocked_log_file.return_value = LogFile('./tests/fixtures/log/invalid.log', datetime.datetime.now())
 
-        self.assertRaises(RuntimeError, run({
-            'REPORT_SIZE': 20,
-            'REPORT_DIR': './tests/reports',
-            'REPORT_TEMPLATE_PATH': './report.html',
-            'LOG_DIR': './tests/fixtures/log',
-            'ERROR_LIMIT': 99,
-        }))
+        with self.assertRaises(BaseException):
+            run({
+                'REPORT_SIZE': 20,
+                'REPORT_DIR': './tests/reports',
+                'REPORT_TEMPLATE_PATH': './report.html',
+                'LOG_DIR': './tests/fixtures/log',
+                'ERROR_LIMIT': 99,
+            })
 
     def test_valid_log(self):
         config = {

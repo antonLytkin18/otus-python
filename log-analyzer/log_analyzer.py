@@ -168,8 +168,7 @@ def run(config):
         for parsed_line in parse_file(log_file.path, config.get('ERROR_LIMIT', 100)):
             report_data[parsed_line['path']].append(float(parsed_line['request_time']))
     except RuntimeError as e:
-        logging.error(str(e))
-        return
+        raise RuntimeError(str(e))
 
     report_data = get_calculated_report_data(report_data, config.get('REPORT_SIZE'), config.get('REPORT_PRECISION'))
     save_report(report_data, report_file_path, config.get('REPORT_TEMPLATE_PATH'))
