@@ -37,6 +37,8 @@ line_pattern = re.compile(
     '(?P<request_time>.*?)$'
 )
 
+LogFile = namedtuple('LogFile', ['path', 'date'])
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -78,7 +80,7 @@ def get_calculated_report_data(report_data, report_size, report_precision):
         })
 
     if len(template_data) > int(report_size):
-        logging.info('Cutting log size to {}'.format(report_size))
+        logging.info(f'Cutting log size to {report_size}')
         template_data.sort(key=lambda item: item['time_sum'], reverse=True)
         return template_data[:int(report_size)]
 
@@ -89,7 +91,6 @@ def get_last_log_file(log_dir):
     if not os.path.isdir(log_dir):
         raise NotADirectoryError
     last_log_file = None
-    LogFile = namedtuple('LogFile', ['path', 'date'])
     for log_name in os.listdir(log_dir):
         matched = re.match('^nginx-access-ui\.log-(?P<date>\d{8})(\.gz)?$', log_name)
         if not matched:
@@ -117,7 +118,7 @@ def parse_file(file_path, error_limit):
             yield result
     errors_percent = round(errors * 100 / lines)
     if errors_percent > error_limit:
-        raise RuntimeError('Percent of errors is more than expected: {}'.format(errors_percent))
+        raise RuntimeError(f'Percent of errors is more than expected: {errors_percent}')
 
 
 def init_logging(file_name=None):
@@ -129,26 +130,25 @@ def init_logging(file_name=None):
     )
 
 
-def get_config_file():
-    args = get_args()
-    return args.config if args and args.config else None
-
-
-def get_config(default_config):
-    config_file_path = get_config_file()
-    if not os.path.isfile(config_file_path):
-        raise FileNotFoundError('Config file not found: "{}"'.format(config_file_path))
+def get_file_config(path):
+    if not path:
+        return {}
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f'Config file not found: "{path}"')
     try:
-        with open(config_file_path, mode='r') as config_file:
+        with open(path, mode='r') as config_file:
             file_config = json.load(config_file)
     except json.decoder.JSONDecodeError:
-        raise Exception('Config file is not in json format: "{}"'.format(config_file_path))
+        raise Exception(f'Config file is not in json format: "{path}"')
+    return file_config
 
-    return default_config if not file_config else {**default_config, **file_config}
+
+def get_config(default_config, file_config):
+    return {**default_config, **file_config}
 
 
 def get_report_file_path(log_file, report_dir):
-    return os.path.join(report_dir, 'report-{}.html'.format(log_file.date.strftime('%Y.%m.%d')))
+    return os.path.join(report_dir, f'report-{log_file.date:%Y.%m.%d}.html')
 
 
 def run(config):
@@ -157,12 +157,12 @@ def run(config):
     log_dir = config.get('LOG_DIR')
     log_file = get_last_log_file(log_dir)
     if not log_file:
-        logging.error('No nginx log file was found in directory: "{}"'.format(log_dir))
+        logging.error(f'No nginx log file was found in directory: "{log_dir}"')
         return
-    logging.info('Last nginx log file was found: "{}"'.format(log_file.path))
+    logging.info(f'Last nginx log file was found: "{log_file.path}"')
     report_file_path = get_report_file_path(log_file, config.get('REPORT_DIR'))
     if os.path.isfile(report_file_path):
-        logging.info('Report file "{}" already exists. Aborting'.format(report_file_path))
+        logging.info(f'Report file "{report_file_path}" already exists. Aborting')
         return
 
     report_data = defaultdict(list)
@@ -171,12 +171,15 @@ def run(config):
 
     report_data = get_calculated_report_data(report_data, config.get('REPORT_SIZE'), config.get('REPORT_PRECISION'))
     save_report(report_data, report_file_path, config.get('REPORT_TEMPLATE_PATH'))
-    logging.info('Report was successfully saved: "{}"'.format(report_file_path))
+    logging.info(f'Report was successfully saved: "{report_file_path}"')
 
 
 def main():
     try:
-        run(get_config(config))
+        args = get_args()
+        file_config = get_file_config(args.config)
+
+        run(get_config(config, file_config))
     except BaseException as e:
         logging.exception(e)
 
