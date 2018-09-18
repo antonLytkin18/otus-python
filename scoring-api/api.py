@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import collections
 import json
 import datetime
 import logging
@@ -41,107 +42,107 @@ DATE_FORMAT = '%d.%m.%Y'
 MAX_USER_AGE = 70
 DAYS_IN_YEAR = 365
 
+
 class Field:
     def __init__(self, required=False, nullable=True):
         self.required = required
         self.nullable = nullable
 
-    def __set__(self, instance, value):
-        self.value = value
-        self._validate()
-
-    def __get__(self, instance, owner):
-        return self.value
-
-    def _validate(self):
-        if not self.nullable and not self.value:
-            raise ValueError('value can not be null')
-        if self.required and self.value is None:
+    def validate(self, value):
+        if self.required and value is None:
             raise ValueError('value is required')
+        if not self.nullable and self.is_nullable(value):
+            raise ValueError('value can not be null')
+
+    @staticmethod
+    def is_nullable(value):
+        return len(value) == 0 if isinstance(value, collections.Iterable) else value is None
 
 
 class CharField(Field):
-    def _validate(self):
-        super()._validate()
-        if not self.value:
+    def validate(self, value):
+        super().validate(value)
+        if not value:
             return
-        if not isinstance(self.value, str):
+        if not isinstance(value, str):
             raise ValueError('invalid value type')
 
 
 class ArgumentsField(Field):
-    def _validate(self):
-        super()._validate()
-        if not isinstance(self.value, dict):
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, dict):
             raise ValueError('invalid value type')
 
 
 class EmailField(CharField):
-    def _validate(self):
-        super()._validate()
-        if not isinstance(self.value, str):
+    def validate(self, value):
+        super().validate(value)
+        if not value:
             return
-        if str(self.value).find('@') == -1:
+        if str(value).find('@') == -1:
             raise ValueError('invalid value format')
 
 
 class PhoneField(Field):
-    def _validate(self):
-        super()._validate()
-        if not self.value:
+    def validate(self, value):
+        super().validate(value)
+        if not value:
             return
-        if not re.compile(PHONE_FORMAT).match(str(self.value)):
+        if not isinstance(value, str) and not isinstance(value, int):
+            raise ValueError('invalid value type')
+        if not re.compile(PHONE_FORMAT).match(str(value)):
             raise ValueError('invalid value format')
 
 
-class DateField(Field):
-    def _validate(self):
-        super()._validate()
-        if not self.value:
+class DateField(CharField):
+    def validate(self, value):
+        super().validate(value)
+        if not value:
             return
         try:
-            datetime.datetime.strptime(self.value, DATE_FORMAT)
+            datetime.datetime.strptime(value, DATE_FORMAT)
         except ValueError:
             raise ValueError('invalid value format')
 
 
 class BirthDayField(DateField):
-    def _validate(self):
-        super()._validate()
-        if not self.value:
+    def validate(self, value):
+        super().validate(value)
+        if not value:
             return
         start_datetime = datetime.datetime.now() - datetime.timedelta(days=MAX_USER_AGE * DAYS_IN_YEAR)
-        if datetime.datetime.strptime(self.value, '%d.%m.%Y') <= start_datetime:
+        if datetime.datetime.strptime(value, '%d.%m.%Y') <= start_datetime:
             raise ValueError(f'Years count more than expected: {MAX_USER_AGE}')
 
 
 class GenderField(Field):
-    def _validate(self):
-        super()._validate()
-        if not self.value:
+    def validate(self, value):
+        super().validate(value)
+        if not value:
             return
-        if not isinstance(self.value, int):
+        if not isinstance(value, int):
             raise ValueError('invalid field type')
-        if self.value not in [UNKNOWN, MALE, FEMALE]:
+        if value not in [UNKNOWN, MALE, FEMALE]:
             raise ValueError('invalid field value')
 
 
 class ClientIDsField(Field):
-    def _validate(self):
-        super()._validate()
-        if not isinstance(self.value, list):
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, list):
             raise ValueError('value must be list type')
-        for clientId in self.value:
+        for clientId in value:
             if not isinstance(clientId, int):
                 raise ValueError('clientId must be integer type')
 
 
 class RequestMeta(type):
     def __new__(mcs, name, bases, attributes):
-        fields = []
+        fields = {}
         for key, val in attributes.items():
             if isinstance(val, Field):
-                fields.append(key)
+                fields[key] = val
 
         cls = super().__new__(mcs, name, bases, attributes)
         cls.fields = fields
@@ -152,18 +153,16 @@ class Request(metaclass=RequestMeta):
 
     def __init__(self, request_params):
         self.errors = []
-        for name in self.fields:
+        for name, field in self.fields.items():
             value = request_params[name] if name in request_params else None
             try:
+                field.validate(value)
                 setattr(self, name, value)
             except ValueError as e:
                 self.errors.append(f'field "{name}": {str(e)}')
 
-    def get_errors(self):
-        return self.errors
-
     def is_valid(self):
-        return not self.get_errors()
+        return not self.errors
 
 
 class ClientsInterestsRequest(Request):
@@ -233,7 +232,7 @@ def check_auth(request):
 def method_handler(request, ctx, store):
     method_request = MethodRequest(request['body'])
     if not method_request.is_valid():
-        return method_request.get_errors(), INVALID_REQUEST
+        return method_request.errors, INVALID_REQUEST
     if not check_auth(method_request):
         return ERRORS[FORBIDDEN], FORBIDDEN
     return process_scoring(method_request, ctx, store)
@@ -261,7 +260,7 @@ def get_online_score(method_request, ctx, store):
         return  {'score': int(ADMIN_SALT)}, OK
     request = OnlineScoreRequest(method_request.arguments)
     if not request.is_valid():
-        return request.get_errors(), INVALID_REQUEST
+        return request.errors, INVALID_REQUEST
     ctx['has'] = request.get_not_empty_fields()
 
     score = scoring.get_score(store, request.phone, request.email, request.birthday, request.gender, request.first_name, request.last_name)
@@ -271,7 +270,7 @@ def get_online_score(method_request, ctx, store):
 def get_clients_interests(method_request, ctx, store):
     request = ClientsInterestsRequest(method_request.arguments)
     if not request.is_valid():
-        return request.get_errors(), INVALID_REQUEST
+        return request.errors, INVALID_REQUEST
     client_ids = request.client_ids
     ctx['nclients'] = len(client_ids)
     clients_interests = {}
