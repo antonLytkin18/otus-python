@@ -140,6 +140,13 @@ class TestSuite(unittest.TestCase):
                         for v in response.values()))
         self.assertEqual(self.context.get("nclients"), len(arguments["client_ids"]))
 
+    def test_competitive_requests(self):
+        request = {"account": "horns&hoofs"}
+        method_request = api.MethodRequest(request)
+        another_request = {"account": "gazprom"}
+        another_method_request = api.MethodRequest(another_request)
+        self.assertIsNot(method_request.account, another_method_request.account)
+
 
 if __name__ == "__main__":
     unittest.main()
