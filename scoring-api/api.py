@@ -80,7 +80,7 @@ class EmailField(CharField):
         super().validate(value)
         if not value:
             return
-        if str(value).find('@') == -1:
+        if '@' not in value:
             raise ValueError('invalid value format')
 
 
