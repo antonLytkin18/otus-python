@@ -2,10 +2,12 @@ import hashlib
 import datetime
 import functools
 import unittest
+from collections import defaultdict
 
 from pip._vendor.pyparsing import basestring
 
 import api
+from store import Store, StoreCacheError
 
 
 def cases(cases):
@@ -19,14 +21,36 @@ def cases(cases):
     return decorator
 
 
+class MockedCache:
+    _has_connection = True
+
+    def __init__(self):
+        self._cache = {}
+
+    def get(self, key):
+        if not self._has_connection:
+            raise StoreCacheError
+        return self._cache.get(key)
+
+    def set(self, key, value, time=None):
+        if not self._has_connection:
+            raise StoreCacheError
+        self._cache.update({key: value})
+        return self
+
+    def disable_connection(self):
+        self._has_connection = False
+        return self
+
+
 class TestSuite(unittest.TestCase):
     def setUp(self):
         self.context = {}
         self.headers = {}
-        self.settings = {}
+        self.store = Store(MockedCache())
 
     def get_response(self, request):
-        return api.method_handler({"body": request, "headers": self.headers}, self.context, self.settings)
+        return api.method_handler({"body": request, "headers": self.headers}, self.context, self.store)
 
     def set_valid_auth(self, request):
         if request.get("login") == api.ADMIN_LOGIN:
@@ -131,6 +155,9 @@ class TestSuite(unittest.TestCase):
         {"client_ids": [0]},
     ])
     def test_ok_interests_request(self, arguments):
+        for cid in arguments['client_ids']:
+            self.store.set('i:%s' % cid, '["cars", "pets"]')
+
         request = {"account": "horns&hoofs", "login": "h&f", "method": "clients_interests", "arguments": arguments}
         self.set_valid_auth(request)
         response, code = self.get_response(request)
@@ -146,6 +173,128 @@ class TestSuite(unittest.TestCase):
         another_request = {"account": "gazprom"}
         another_method_request = api.MethodRequest(another_request)
         self.assertIsNot(method_request.account, another_method_request.account)
+
+
+class FieldsTestSuite(unittest.TestCase):
+    @cases(['test', '123', '', '0'])
+    def test_char_field_is_valid(self, args):
+        field = api.CharField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases([11, 12.5, True])
+    def test_char_field_is_not_valid(self, args):
+        field = api.CharField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    @cases([{}, {'param': 123}, defaultdict(list)])
+    def test_arguments_field_is_valid(self, args):
+        field = api.ArgumentsField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases(['test', [], {1, 'asd'}, True, False])
+    def test_arguments_field_is_not_valid(self, args):
+        field = api.ArgumentsField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    @cases(['asd@mail.ru', 'test@test.ru'])
+    def test_email_field_is_valid(self, args):
+        field = api.EmailField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases(['test', 123])
+    def test_email_field_is_not_valid(self, args):
+        field = api.EmailField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    @cases(['79991232323', 79991232323])
+    def test_phone_field_is_valid(self, args):
+        field = api.PhoneField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases(['89991232323', '+79991232323', 8999123232311, '8999'])
+    def test_phone_field_is_not_valid(self, args):
+        field = api.PhoneField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    @cases(['18.02.1991', '01.01.9999', '12.12.1234'])
+    def test_date_field_is_valid(self, args):
+        field = api.DateField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases([11, '18/02/1991', '12.34.5678'])
+    def test_date_field_is_not_valid(self, args):
+        field = api.DateField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    @cases(['18.02.1991', '11.12.1960'])
+    def test_birthday_field_is_valid(self, args):
+        field = api.BirthDayField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases(['18.02.1891', '11.12.1860'])
+    def test_birthday_field_is_not_valid(self, args):
+        field = api.BirthDayField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    @cases([api.UNKNOWN, api.MALE, api.FEMALE])
+    def test_gender_field_is_valid(self, args):
+        field = api.GenderField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases([3, '4', 'asd'])
+    def test_gender_field_is_not_valid(self, args):
+        field = api.GenderField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    @cases([[], [1, 2, 3, 123], [0]])
+    def test_client_ids_field_is_valid(self, args):
+        field = api.ClientIDsField()
+        self.assert_not_raises(ValueError, field.validate, args)
+
+    @cases([{1, 2, 3, 123}, [123, 'asd'], [None, True, False]])
+    def test_client_ids_field_is_not_valid(self, args):
+        field = api.ClientIDsField()
+        with self.assertRaises(ValueError):
+            field.validate(args)
+
+    def assert_not_raises(self, exception, method, *args):
+        try:
+            method(*args)
+        except exception:
+            self.fail(f'Method {method.__name__}() raises an {exception.__name__} exception')
+
+
+class StoreTestSuite(unittest.TestCase):
+    def test_available_store(self):
+        store = Store(MockedCache())
+        store.set('key', 'test')
+        store.set('another_key', 'another_test')
+        self.assertEqual(store.get('key'), 'test')
+        self.assertEqual(store.get('another_key'), 'another_test')
+
+    def test_unavailable_store(self):
+        store = Store(MockedCache().disable_connection())
+        with self.assertRaises(StoreCacheError):
+            store.set('key', 'test')
+
+    def test_available_cache(self):
+        store = Store(MockedCache())
+        store.cache_set('key', 'test')
+        store.cache_set('another_key', 'another_test')
+        self.assertEqual(store.cache_get('key'), 'test')
+        self.assertEqual(store.cache_get('another_key'), 'another_test')
+
+    def test_unavailable_cache(self):
+        store = Store(MockedCache().disable_connection())
+        store.cache_set('key', 'test')
+        self.assertEqual(store.cache_get('key'), False)
 
 
 if __name__ == "__main__":
