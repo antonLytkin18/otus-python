@@ -15,6 +15,7 @@ class Server:
     CHUNK_SIZE = 1024
     HOST = ''
     PORT = 8080
+    CLIENT_TIMEOUT = 10
 
     def __init__(self, root, port):
         self._document_root = root
@@ -42,6 +43,7 @@ class Server:
 
     def serve(self):
         client_socket, address_info = self._socket.accept()
+        client_socket.settimeout(self.CLIENT_TIMEOUT)
         with client_socket:
             request = self.create_request(client_socket)
             response = Response(request, self._document_root)
