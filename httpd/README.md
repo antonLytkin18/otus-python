@@ -43,11 +43,11 @@ Ran 22 tests in 0.035s
 OK
 ```
 
-**AB tests result with 6 workers**
+**Running AB tests**
 
 `ab -n 50000 -c 100 -r http://localhost:8080/`
 
-**AB tests result**
+**AB tests result with 6 workers**
 
 ```
 This is ApacheBench, Version 2.3 <$Revision: 1706008 $>
