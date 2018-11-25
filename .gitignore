@@ -5,3 +5,4 @@
 /log-analyzer/tests/reports/*
 !/log-analyzer/tests/reports/.gitkeep
 /log-analyzer/parser.log
+/venv
