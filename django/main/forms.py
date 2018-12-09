@@ -1,10 +1,11 @@
 from django import forms
 
 from hasker import settings
+from hasker.forms import BootstrapForm
 from main.models import Question, Answer, Tag
 
 
-class QuestionForm(forms.ModelForm):
+class QuestionForm(BootstrapForm):
     tags = forms.CharField(required=False)
 
     class Meta:
@@ -26,7 +27,7 @@ class QuestionForm(forms.ModelForm):
         return tags_objects
 
 
-class AnswerForm(forms.ModelForm):
+class AnswerForm(BootstrapForm):
     class Meta:
         model = Answer
         fields = ['text']
