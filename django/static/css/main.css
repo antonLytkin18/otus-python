@@ -1,0 +1,36 @@
+html {
+  font-size: 14px;
+}
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.container, .hasker-container {
+  max-width: 960px;
+}
+
+.pricing-header {
+  max-width: 700px;
+}
+
+.card-deck .card {
+  min-width: 220px;
+}
+
+.question-vote, .answer-vote {
+  width: 50px;
+}
+
+.question-answer {
+  background-color: #eee;
+}
+
+.required-star {
+  color: #dc3545;
+}
+
+.form-errors {
+  color: red;
+}
