@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>{{ question }}</h2>
+    <div class="row mt-5">
+        <div class="question-vote text-center h2">
+            <a href="{% url 'main:vote_question' question.id  %}" class="like text-dark"><i class="fas fa-chevron-up"></i></a>
+            <span class="rating">{{ question.rating }}</span>
+            <a href="{% url 'main:vote_question' question.id  %}" class="dislike text-dark"><i class="fas fa-chevron-down"></i></a>
+        </div>
+        <div class="col-11">
+            {{ question.text }}
+        </div>
+    </div>
+    <div class="row border-bottom pb-3 mb-3">
+        <div class="col-1"></div>
+        <div class="col-6">
+            {% for tag in question.tags.all %}
+                <a href="{% url 'main:search' %}?q=tag:{{ tag }}" class="badge badge-success py-1 px-3">{{ tag }}</a>
+            {% endfor %}
+        </div>
+        <div class="col-4">
+            {% if question.user.avatar %}
+                <img width="50" class="img-thumbnail" src="{{ question.user.avatar.url }}" alt="">
+            {% endif %}
+            <span class="align-middle"><i class="far fa-user"></i> {{ question.user.nickname }}</span>
+        </div>
+    </div>
+    <div class="answers-list">
+        <ul class="list-group list-group-flush">
+        {% for answer in page_obj.object_list %}
+            <li class="list-group-item question-answer">
+                <div class="row mt-5">
+                    <div class="answer-vote text-center h2">
+                        <a href="{% url 'main:vote_answer' answer.id  %}" class="like text-dark"><i class="fas fa-chevron-up"></i></a>
+                        <span class="rating">{{ answer.rating }}</span>
+                        <a href="{% url 'main:vote_answer' answer.id  %}" class="dislike text-dark"><i class="fas fa-chevron-down"></i></a>
+                        {% if user.is_authenticated and user.id == question.user.id %}
+                            <a href="{% url 'main:answer_solution' answer.id %}" class="mark-as-solution">
+                                <i class="solution-star {% if answer.is_solution %}fas{% else %}far{% endif %} fa-star"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-11">
+                        {{ answer.text }}
+                    </div>
+                </div>
+                <div class="row pb-3 mb-3">
+                    <div class="col-1"></div>
+                    <div class="col-6"></div>
+                    <div class="col-4">
+                        {% if answer.user.avatar %}
+                            <img width="50" class="img-thumbnail" src="{{ answer.user.avatar.url }}" alt="">
+                        {% endif %}
+                        <span class="align-middle"><i class="far fa-user"></i> {{ answer.user.nickname }}</span>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+        <hr>
+        {% include 'includes/pagination.html' %}
+    </div>
+
+    <form method="post">
+        {% include 'includes/form.html' %}
+        <button type="submit" class="btn btn-primary">Answer</button>
+    </form>
+{% endblock %}

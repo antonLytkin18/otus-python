@@ -1,0 +1,35 @@
+<ul class="list-group">
+    {% for question in questions %}
+        <li class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <div class="col-1 text-center">
+                    <span>{{ question.rating }}</span><br>
+                    <span>votes</span>
+                </div>
+
+                <div class="col-1 text-center">
+                    <span>{{ question.answer_set.count }}</span><br>
+                    <span>answers</span>
+                </div>
+                <div class="col-5 pl-5">
+                    <a class="text-dark" href="{% url 'main:question' question.id %}">{{ question.title }}</a>
+                    <div>
+                        {% for tag in question.tags.all %}
+                            <a href="{% url 'main:search' %}?q=tag:{{ tag }}" class="badge badge-success py-1 px-3">{{ tag }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div>
+                        <i class="far fa-user"></i> {{ question.user }} <br>
+                        <i class="far fa-calendar"></i> {{ question.created_at }}
+                    </div>
+                </div>
+            </div>
+        </li>
+    {% empty %}
+        Question list is empty.
+    {% endfor %}
+    <hr>
+    {% include 'includes/pagination.html' %}
+</ul>

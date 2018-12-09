@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% if tag %}
+        <h1>Tag [{{ tag }}] search result</h1>
+    {% else %}
+        <h1>Search result</h1>
+    {% endif %}
+    {% include 'main/includes/question_list.html' %}
+{% endblock %}

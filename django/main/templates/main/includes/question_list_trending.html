@@ -1,0 +1,8 @@
+<div class="list-group">
+{% for question in questions %}
+    <a href="{% url 'main:question' question.id %}" class="list-group-item d-flex list-group-item-action justify-content-between align-items-start">
+        {{ question.title }}
+        <span class="badge badge-primary badge-pill">{{ question.rating }}</span>
+    </a>
+{% endfor %}
+</div>
