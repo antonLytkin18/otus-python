@@ -1,0 +1,15 @@
+<div class="custom-file">
+    <input type="{{ widget.type }}" name="{{ widget.name }}" class="custom-file-input">
+    <label class="custom-file-label" for="validatedCustomFile">{{ widget.input_text }}</label>
+</div>
+<br>
+<br>
+{% if widget.is_initial %}
+    <img width="200" class="img-thumbnail rounded " src="{{ widget.value.url }}" alt=""/>
+    <br>
+    <br>
+    {% if not widget.required %}
+        <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"/>
+        <label for="{{ widget.checkbox_id }}">{{ widget.clear_checkbox_label }}</label>
+    {% endif %}
+{% endif %}

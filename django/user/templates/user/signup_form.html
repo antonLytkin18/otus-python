@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h4 class="mb-3">Sign up</h4>
+    <div class="pr-5 pb-5">
+        <form method="post" enctype="multipart/form-data">
+            {% include 'includes/form.html' %}
+            <button type="submit" class="btn btn-primary">Enter</button>
+        </form>
+    </div>
+{% endblock %}
