@@ -1,0 +1,22 @@
+<br>
+{% if form.errors %}
+    <div class="form-errors">
+        {% for key, error in form.errors.items %}
+            {{ error }}
+        {% endfor %}
+    </div>
+{% endif %}
+{% csrf_token %}
+{% for field in form %}
+    <div class="form-group">
+        <label class="control-label">{{ field.label }}:{% if field.field.required %}<span class="required-star"> *</span>{% endif %}</label>
+        <div class="control-item">
+            {{ field }}
+            {% if field.errors %}
+                <div class="invalid-feedback">
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}

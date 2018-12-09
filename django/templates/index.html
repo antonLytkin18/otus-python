@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.tab %}active{% endif %}" href="{% url 'main:index' %}">New</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.tab == 'hot' %}active{% endif %}" href="/?tab=hot">Hot</a>
+        </li>
+    </ul>
+    <hr>
+    {% include 'main/includes/question_list.html' %}
+{% endblock %}
