@@ -1,4 +1,4 @@
-**Start memcache server**
+**Start memcache servers in verbose mode**
 
 `memcached -p 33013 -vv`
 
