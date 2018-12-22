@@ -78,8 +78,6 @@ class AppsParser:
         self.result_queue = result_queue
 
     def run(self, path, device_memc, dry):
-        if path == 'data/sample_1.tsv.gz':
-            sleep(10)
         processed = errors = 0
         logging.info('Processing %s' % path)
         with gzip.open(path) as file:
