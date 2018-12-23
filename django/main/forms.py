@@ -22,8 +22,7 @@ class QuestionForm(BootstrapForm):
         tags = tags[-settings.TAGS_LIMIT:]
         tags_objects = []
         for tag in tags:
-            tag_object, _ = Tag.objects.get_or_create(name=tag)
-            tags_objects.append(tag_object)
+            tags_objects.append(Tag.objects.get_or_create(name=tag)[0])
         return tags_objects
 
 
