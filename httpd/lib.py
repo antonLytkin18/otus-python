@@ -27,7 +27,7 @@ class Request:
         params = self._query_string.split('?', 1)
         self._path = parse.unquote(params[0])
         self._query_params = params[1] if len(params) > 1 else ''
-        self._headers = headers_string.splitlines()
+        self._headers = headers_string.splitlines()[:-1]
 
     def get_request_data(self):
         return self._request_data
