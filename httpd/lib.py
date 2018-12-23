@@ -33,7 +33,7 @@ class Request:
         return self._request_data
 
     def is_complete(self):
-        return self._request_data.endswith(CLRF * 2)
+        return CLRF * 2 in self._request_data
 
     def get_query_string(self):
         return self._query_string
