@@ -6,26 +6,25 @@ from django.views import generic
 from user.forms import SignUpForm, UserProfileForm, LoginForm
 
 
-class SignUpView(generic.CreateView):
+class AuthViewMixin:
+    success_url = '/'
+    object = None
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = self.object if self.object else form.get_user()
+        login(self.request, user)
+        return response
+
+
+class SignUpView(AuthViewMixin, generic.CreateView):
     form_class = SignUpForm
     template_name = 'user/signup_form.html'
-    success_url = '/'
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        login(self.request, self.object)
-        return response
 
 
-class LoginView(generic.FormView):
+class LoginView(AuthViewMixin, generic.FormView):
     form_class = LoginForm
     template_name = 'user/login_form.html'
-    success_url = '/'
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        login(self.request, form.get_user())
-        return response
 
     def get_success_url(self):
         next_url = self.request.GET.get('next')
