@@ -41,17 +41,14 @@ class Server:
             expected_size += self.CHUNK_SIZE
         return request
 
-    def serve(self):
-        client_socket, address_info = self._socket.accept()
-        client_socket.settimeout(self.CLIENT_TIMEOUT)
-        with client_socket:
-            request = self.create_request(client_socket)
-            response = Response(request, self._document_root)
-            client_socket.sendall(response.to_bytes())
-
     def serve_forever(self):
         while True:
-            self.serve()
+            client_socket, address_info = self._socket.accept()
+            client_socket.settimeout(self.CLIENT_TIMEOUT)
+            with client_socket:
+                request = self.create_request(client_socket)
+                response = Response(request, self._document_root)
+                client_socket.sendall(response.to_bytes())
 
 
 if __name__ == '__main__':
