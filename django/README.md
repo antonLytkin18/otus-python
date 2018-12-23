@@ -20,3 +20,9 @@
 **Running unit tests**
 
 `docker-compose exec django_web python manage.py test`
+
+**Api usage**
+
+We use swagger to test and describe API.
+
+Specification: `http://127.0.0.1:9000/swagger/`
