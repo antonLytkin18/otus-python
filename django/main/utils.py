@@ -1,3 +1,5 @@
+import logging
+
 from django.core.mail import send_mail
 from django.db.models import Q
 
@@ -47,8 +49,8 @@ class Mailer:
         message = f'Click on link below to see the answer: {url}'
         try:
             send_mail(subject, message, settings.DEFAULT_EMAIL_FROM, [email])
-        except ConnectionRefusedError:
-            return False
+        except OSError as e:
+            logging.error(str(e))
 
 
 class JSONResponseMixin:
