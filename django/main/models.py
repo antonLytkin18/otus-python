@@ -32,14 +32,21 @@ class Question(TimestampedModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     rating = models.IntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name='questions')
+    solution_answer = models.OneToOneField(
+        'Answer',
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='solution_answer'
+    )
 
     objects = QuestionManager()
 
     def __str__(self):
         return self.title
 
-    def solution_answer(self):
-        return self.answer_set.filter(is_solution=True).first()
+    def set_solution_answer(self, answer):
+        self.solution_answer = answer
+        return self
 
     def answers(self):
         return self.answer_set.order_by('-rating', '-created_at')
@@ -47,7 +54,6 @@ class Question(TimestampedModel):
 
 class Answer(TimestampedModel):
     text = models.TextField(null=False)
-    is_solution = models.BooleanField(default=False)
     rating = models.IntegerField(default=0)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -56,12 +62,9 @@ class Answer(TimestampedModel):
         return self.text
 
     def mark_as_solution(self):
-        prev_solution = self.question.solution_answer()
-        if prev_solution:
-            prev_solution.is_solution = False
-            prev_solution.save()
-        self.is_solution = True
-        self.save()
+        if self.question.solution_answer:
+            return self.question.set_solution_answer(None).save()
+        return self.question.set_solution_answer(self).save()
 
 
 class VoteMixin(models.Model):

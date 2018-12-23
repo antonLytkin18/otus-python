@@ -111,7 +111,7 @@ class QuestionSolutionView(LoginRequiredMixin, JSONResponseMixin, TemplateView):
             }, status=403)
         answer.mark_as_solution()
         return self.render_to_json_response(request, data={
-            'is_solution': answer.is_solution,
+            'is_solution': True,
         })
 
 
