@@ -34,3 +34,7 @@ html {
 .form-errors {
   color: red;
 }
+
+.img-avatar {
+  margin: 15px 0;
+}
