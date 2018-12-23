@@ -83,7 +83,11 @@ class AbstractVoteView(LoginRequiredMixin, JSONResponseMixin, TemplateView):
     entity = None
 
     def post(self, request, vote_id):
-        value = 1 if int(request.POST.get('value')) > 0 else -1
+        try:
+            post_value = int(request.POST.get('value'))
+        except ValueError:
+            post_value = 1
+        value = 1 if post_value > 0 else -1
         entity = get_object_or_404(self.entity, pk=vote_id)
         self.model.vote(request.user, entity, value)
         return self.render_to_json_response(request, data={
