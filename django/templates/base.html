@@ -24,9 +24,13 @@
         </span>
     </form>
     {% if user.is_authenticated %}
-        {% if user.avatar %}
-            <a href="{% url 'user:profile' %}"><img width="50" class="img-thumbnail" src="{{ user.avatar.url }}" alt=""></a>
-        {% endif %}
+        <a href="{% url 'user:profile' %}">
+            {% if user.avatar %}
+                <img width="50" class="img-thumbnail" src="{{ user.avatar.url }}" alt="">
+            {% else %}
+                <img width="50" class="img-thumbnail" src="{% static 'img/avatar_stub.png' %}" alt="">
+            {% endif %}
+        </a>
         <div class="d-inline-block ml-2 profile-head">
             <i class="far fa-user"></i>
             <a class="text-dark" href="{% url 'user:profile' %}">{{ user.username }}</a> |
