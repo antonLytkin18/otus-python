@@ -73,7 +73,7 @@ class Response:
             self.set_not_allowed()
             return
         self._file_path = self.build_file_path(document_root)
-        if not self.is_file_exists():
+        if not os.path.exists(self._file_path):
             self.set_not_found()
             return
         self._content_type = self.get_content_type()
@@ -106,9 +106,6 @@ class Response:
     def get_content(self):
         with open(self._file_path, 'rb') as file:
             return file.read()
-
-    def is_file_exists(self):
-        return os.path.exists(self._file_path)
 
     def get_content_type(self):
         content_type, encoding = mimetypes.guess_type(self._file_path)
