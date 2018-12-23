@@ -14,7 +14,7 @@
                 <div class="col-5 pl-5">
                     <a class="text-dark" href="{% url 'main:question' question.id %}">{{ question.title }}</a>
                     <div>
-                        {% for tag in question.tags.all %}
+                        {% for tag in question.get_tags_names %}
                             <a href="{% url 'main:search' %}?q=tag:{{ tag }}" class="badge badge-success py-1 px-3">{{ tag }}</a>
                         {% endfor %}
                     </div>

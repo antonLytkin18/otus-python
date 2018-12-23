@@ -51,6 +51,9 @@ class Question(TimestampedModel):
     def answers(self):
         return self.answer_set.order_by('-rating', '-created_at')
 
+    def get_tags_names(self):
+        return self.tags.values_list('name', flat=True)
+
 
 class Answer(TimestampedModel):
     text = models.TextField(null=False)

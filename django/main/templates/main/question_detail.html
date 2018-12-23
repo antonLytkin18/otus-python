@@ -15,7 +15,7 @@
     <div class="row border-bottom pb-3 mb-3">
         <div class="col-1"></div>
         <div class="col-6">
-            {% for tag in question.tags.all %}
+            {% for tag in question.get_tags_names %}
                 <a href="{% url 'main:search' %}?q=tag:{{ tag }}" class="badge badge-success py-1 px-3">{{ tag }}</a>
             {% endfor %}
         </div>
