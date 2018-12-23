@@ -34,10 +34,10 @@ class QuestionTagSearchHandler(BaseSearchHandler):
             try:
                 self._tag = Tag.objects.get(name=self._query)
             except Tag.DoesNotExist:
-                self._tag = None
+                self._tag = Tag(name=self._query)
 
     def get_question_queryset(self):
-        return Question.objects.filter(tags__id=self._tag.id) if self._tag else Question.objects.none()
+        return Question.objects.filter(tags__id=self._tag.id) if self._tag.id else Question.objects.none()
 
 
 class Mailer:
