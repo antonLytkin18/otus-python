@@ -29,18 +29,18 @@ class Request:
         self._query_params = params[1] if len(params) > 1 else ''
         self._headers = headers_string.splitlines()[:-1]
 
-    def get_request_data(self):
-        return self._request_data
-
     def is_complete(self):
         return CLRF * 2 in self._request_data
 
-    def get_query_string(self):
-        return self._query_string
+    @property
+    def get_request_data(self):
+        return self._request_data
 
+    @property
     def get_path(self):
         return self._path
 
+    @property
     def get_method(self):
         return self._method
 
@@ -66,10 +66,10 @@ class Response:
 
     def __init__(self, request, document_root):
         self._request = request
-        if not self._request.get_request_data():
+        if not self._request.get_request_data:
             self._status = self.BAD_REQUEST
             return
-        if not self._request.get_method() in self._allowed_methods:
+        if self._request.get_method not in self._allowed_methods:
             self._status = self.NOT_ALLOWED
             return
         self._file_path = self.build_file_path(document_root)
@@ -79,11 +79,11 @@ class Response:
         self._content_type = self.get_content_type()
         self._body = self.get_content()
         self._content_length = len(self._body)
-        if self.is_head_request():
+        if self.is_head_request:
             self.clear_body()
 
     def build_file_path(self, document_root):
-        path = self._request.get_path()
+        path = self._request.get_path
         path += 'index.html' if path.endswith('/') else ''
         root = document_root if document_root else os.path.dirname(os.path.abspath(__file__))
         return root + os.path.normpath(path)
@@ -100,8 +100,9 @@ class Response:
         self._body = b''
         return self
 
+    @property
     def is_head_request(self):
-        return self._request.get_method() == 'HEAD'
+        return self._request.get_method == 'HEAD'
 
     def get_headers(self):
         return [
