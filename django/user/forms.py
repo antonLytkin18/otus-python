@@ -15,7 +15,7 @@ class ImageInput(ClearableFileInput):
 class SignUpForm(UserCreationForm, BootstrapForm):
     class Meta:
         model = User
-        fields = ['username', 'nickname', 'email', 'password1', 'password2', 'avatar']
+        fields = ['username', 'email', 'password1', 'password2', 'avatar']
         widgets = {
             'avatar': ImageInput()
         }
@@ -24,7 +24,7 @@ class SignUpForm(UserCreationForm, BootstrapForm):
 class UserProfileForm(BootstrapForm):
     class Meta:
         model = User
-        fields = ['username', 'email', 'nickname', 'avatar']
+        fields = ['username', 'email', 'avatar']
         widgets = {
             'avatar': ImageInput()
         }
