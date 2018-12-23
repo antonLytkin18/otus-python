@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F
 
 
@@ -84,9 +84,9 @@ class VoteMixin(models.Model):
             old_value = vote.value
             vote.value = value
             entity.rating = F('rating') - old_value + vote.value
-
-        entity.save()
-        vote.save()
+        with transaction.atomic():
+            entity.save()
+            vote.save()
         entity.refresh_from_db()
 
     class Meta:
