@@ -8,7 +8,7 @@ import httpd
 
 
 class HttpServer(unittest.TestCase):
-    host = "localhost"
+    host = 'localhost'
     port = httpd.Server.PORT
 
     def setUp(self):
