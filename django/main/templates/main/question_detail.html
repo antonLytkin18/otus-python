@@ -40,7 +40,7 @@
                         <a href="{% url 'main:vote_answer' answer.id  %}" class="dislike text-dark"><i class="fas fa-chevron-down"></i></a>
                         {% if user.is_authenticated and user.id == question.user.id %}
                             <a href="{% url 'main:answer_solution' answer.id %}" class="mark-as-solution">
-                                <i class="solution-star {% if answer.question.solution_answer %}fas{% else %}far{% endif %} fa-star"></i>
+                                <i class="solution-star {% if answer.question.solution_answer.id == answer.id %}fas{% else %}far{% endif %} fa-star"></i>
                             </a>
                         {% endif %}
                     </div>

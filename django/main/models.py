@@ -65,7 +65,7 @@ class Answer(TimestampedModel):
         return self.text
 
     def mark_as_solution(self):
-        if self.question.solution_answer:
+        if self.question.solution_answer and self.question.solution_answer.id == self.id:
             return self.question.set_solution_answer(None).save()
         return self.question.set_solution_answer(self).save()
 
