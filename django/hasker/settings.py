@@ -7,9 +7,9 @@ LOGOUT_REDIRECT_URL = '/'
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 AUTH_USER_MODEL = 'user.User'
 
