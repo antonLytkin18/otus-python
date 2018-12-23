@@ -1,18 +1,11 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import F
-from django.utils import timezone
 
 
 class TimestampedModel(models.Model):
-    created_at = models.DateTimeField(editable=False)
-    updated_at = models.DateTimeField(editable=False, default=timezone.now)
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
-        return super().save(*args, **kwargs)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
 
     class Meta:
         abstract = True
