@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -110,9 +111,7 @@ class QuestionSolutionView(LoginRequiredMixin, JSONResponseMixin, TemplateView):
     def post(self, request, answer_id):
         answer = get_object_or_404(Answer, pk=answer_id)
         if request.user.id != answer.question.user.id:
-            return self.render_to_json_response(request, data={
-                'error': 'Forbidden',
-            }, status=403)
+            raise PermissionDenied('You have no access to do this')
         answer.mark_as_solution()
         return self.render_to_json_response(request, data={
             'is_solution': True,
