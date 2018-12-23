@@ -66,36 +66,21 @@ class Response:
 
     def __init__(self, request, document_root):
         self._request = request
-        if not self.has_request_data():
-            self.set_bad_request()
+        if not self._request.get_request_data():
+            self._status = self.BAD_REQUEST
             return
-        if not self.is_method_allowed():
-            self.set_not_allowed()
+        if not self._request.get_method() in self._allowed_methods:
+            self._status = self.NOT_ALLOWED
             return
         self._file_path = self.build_file_path(document_root)
         if not os.path.exists(self._file_path):
-            self.set_not_found()
+            self._status = self.NOT_FOUND
             return
         self._content_type = self.get_content_type()
         self._body = self.get_content()
         self._content_length = len(self._body)
         if self.is_head_request():
             self.clear_body()
-
-    def is_method_allowed(self):
-        return self._request.get_method() in self._allowed_methods
-
-    def set_not_allowed(self):
-        self._status = self.NOT_ALLOWED
-        return self
-
-    def set_not_found(self):
-        self._status = self.NOT_FOUND
-        return self
-
-    def set_bad_request(self):
-        self._status = self.BAD_REQUEST
-        return self
 
     def build_file_path(self, document_root):
         path = self._request.get_path()
@@ -110,9 +95,6 @@ class Response:
     def get_content_type(self):
         content_type, encoding = mimetypes.guess_type(self._file_path)
         return content_type
-
-    def has_request_data(self):
-        return self._request.get_request_data()
 
     def clear_body(self):
         self._body = b''
