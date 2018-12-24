@@ -3,7 +3,7 @@ import logging
 from django.core.mail import send_mail
 from django.db.models import Q
 
-from hasker import settings
+from django.conf import settings
 from main.models import Question, Tag
 
 from django.http import JsonResponse

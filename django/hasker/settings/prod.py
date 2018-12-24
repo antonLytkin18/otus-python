@@ -1,13 +1,13 @@
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 LOGIN_URL = '/login'
 LOGOUT_REDIRECT_URL = '/'
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1']
 

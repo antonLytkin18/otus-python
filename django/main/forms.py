@@ -1,6 +1,6 @@
 from django import forms
 
-from hasker import settings
+from django.conf import settings
 from hasker.forms import BootstrapForm
 from main.models import Question, Answer, Tag
 
