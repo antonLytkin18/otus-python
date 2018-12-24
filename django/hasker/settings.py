@@ -14,18 +14,19 @@ ALLOWED_HOSTS = ['127.0.0.1']
 AUTH_USER_MODEL = 'user.User'
 
 INSTALLED_APPS = [
-    'main.apps.MainConfig',
-    'user.apps.UserConfig',
-    'api.apps.ApiConfig',
-    'rest_framework',
-    'rest_framework_swagger',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
 
+    'rest_framework',
+    'rest_framework_swagger',
+
+    'api.apps.ApiConfig',
+    'main.apps.MainConfig',
+    'user.apps.UserConfig',
 ]
 
 MIDDLEWARE = [
