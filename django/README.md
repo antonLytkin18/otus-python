@@ -16,6 +16,13 @@
 
 `pillow, 5.3.0`
 
+**Environment parameter for production**
+
+`DJANGO_SETTINGS_MODULE=hasker.settings.prod`
+
+**Environment parameter for development**
+
+`DJANGO_SETTINGS_MODULE=hasker.settings.dev`
 
 **Running unit tests**
 
