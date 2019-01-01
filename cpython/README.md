@@ -1,6 +1,6 @@
 **[Increment / decrement path](inc.patch)**
 
-A path that add an increment / decrement statements. Usage:
+The path adds an increment / decrement statements. Usage:
 
 ```python
 variable ++
@@ -24,7 +24,7 @@ LOAD_FAST
 LOAD_CONST
 ```
 
-into a single opcode:
+into a single one:
 
 ```python
 LOAD_OTUS
