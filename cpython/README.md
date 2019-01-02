@@ -1,6 +1,6 @@
 **[Increment / decrement path](inc.patch)**
 
-The path adds an increment / decrement statements. Usage:
+The patch adds an increment / decrement statements. Usage:
 
 ```python
 variable ++
