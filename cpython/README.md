@@ -32,4 +32,10 @@ LOAD_OTUS
 
 **To apply the patch you should run:**
 
+`git clone https://github.com/python/cpython.git`
+
+`cd cpython`
+
+`git checkout 2.7`
+
 `git apply <name>.patch`
