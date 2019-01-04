@@ -2,7 +2,7 @@
 Description=uWSGI instance to serve weather app
 
 [Service]
-ExecStartPre=-/bin/bash -c 'mkdir -p /run/uwsgi; chown user:nginx /run/uwsgi'
+ExecStartPre=-/bin/bash -c 'mkdir -p /run/uwsgi; chown nginx /run/uwsgi'
 ExecStart=/bin/bash -c 'cd /tmp/bin/uwsgi/; uwsgi --ini ip2w.ini'
 
 [Install]
