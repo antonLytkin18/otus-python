@@ -1,0 +1,5 @@
+[user]
+	email = a.lytkin@worksolutions.ru
+	name = Anton Lytkin
+[core]
+	autocrlf = input
