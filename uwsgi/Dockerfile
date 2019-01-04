@@ -1,6 +1,9 @@
 FROM centos:7
 
 MAINTAINER "Anton Lytkin" <a.lytkin@worksolutions.ru>
+
+WORKDIR /tmp/bin/uwsgi
+
 RUN yum -y install epel-release && \
     yum -y install nginx && \
     yum -y install git && \
