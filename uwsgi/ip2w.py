@@ -52,7 +52,10 @@ def get_location_info(ip=''):
 
 @reconnect()
 def get_weather_info(location_info):
-    lat, lon = location_info.get('loc').split(',')
+    coords = location_info.get('loc').split(',')
+    if len(coords) != 2:
+        raise Exception('invalid count of coords')
+    lat, lon = coords
     response = requests.get(WEATHER_API_URL, params={
         'lat': lat,
         'lon': lon,
@@ -60,8 +63,10 @@ def get_weather_info(location_info):
         'units': 'metric',
     }, timeout=REQUEST_TIMEOUT)
     info = response.json()
+    if info.get('cod') != 200:
+        raise Exception(info.get('message'))
     return {
-        'city': location_info.get('city'),
+        'city': info.get('name'),
         'temp': info['main']['temp'],
         'conditions': ', '.join([item['description'] for item in info['weather']])
     }
