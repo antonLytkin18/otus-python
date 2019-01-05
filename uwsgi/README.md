@@ -24,7 +24,7 @@
 
 **6. Check results**
 
-`http://localhost:8085/ip2w/176.14.221.123`
+`http://localhost:8080/ip2w/176.14.221.123`
 
 **7. Run tests**
 
