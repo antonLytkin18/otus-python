@@ -5,7 +5,7 @@ URL:            http://otus.ru/lessons/3/
 Source0:        otus-%{current_datetime}.tar.gz
 BuildRoot:      %{_tmppath}/otus-%{current_datetime}
 Name:           ip2w
-Version:        0.0.2
+Version:        0.0.1
 Release:        1
 BuildArch:      noarch
 Requires(post): systemd

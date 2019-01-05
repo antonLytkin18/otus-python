@@ -22,6 +22,8 @@ ADD requirements.txt .
 RUN pip3.6 install --upgrade pip
 RUN pip3.6 install -r requirements.txt
 
+RUN rm -f /usr/bin/python && ln -s /usr/bin/python3.6 /usr/bin/python
+
 COPY .gitconfig /root/.gitconfig
 
 EXPOSE 80
