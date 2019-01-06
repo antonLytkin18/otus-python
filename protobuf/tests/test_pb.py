@@ -24,7 +24,6 @@ class TestPB(unittest.TestCase):
         self.assertTrue(bytes_written > 0)
         # check magic, type, etc.
 
-    @unittest.skip("Optional problem")
     def test_read(self):
         pb.deviceapps_xwrite_pb(self.deviceapps, TEST_FILE)
         for i, d in enumerate(pb.deviceapps_xread_pb(TEST_FILE)):

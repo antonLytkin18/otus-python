@@ -19,8 +19,8 @@ typedef struct pbheader_s {
 size_t write_into_file(PyObject *dict, gzFile fd) {
     DeviceApps msg = DEVICE_APPS__INIT;
     DeviceApps__Device device = DEVICE_APPS__DEVICE__INIT;
-    void *buf;
-    unsigned len;
+    void *msg_buf;
+    unsigned msg_len;
 
     PyObject *device_dict = PyDict_GetItemString(dict, "device");
     if (NULL == device_dict || !PyDict_Check(device_dict)) {
@@ -71,76 +71,39 @@ size_t write_into_file(PyObject *dict, gzFile fd) {
     msg.n_apps = PyList_Size(apps);
     msg.apps = malloc(sizeof(uint32_t) * msg.n_apps);
     if (NULL == msg.apps) {
-        PyErr_SetString(PyExc_ValueError, "Can't allocate memory for apps");
+        PyErr_SetString(PyExc_MemoryError, "Unable to allocate memory for apps");
         return 0;
     }
 
-    size_t i;
+    int i;
     for (i = 0; i < msg.n_apps; ++i) {
         PyObject *app_item = PyList_GetItem(apps, i);
         msg.apps[i] = PyInt_AsLong(app_item);
     }
 
-    len = device_apps__get_packed_size(&msg);
+    msg_len = device_apps__get_packed_size(&msg);
 
-    buf = malloc(len);
-    if (NULL == buf) {
-        PyErr_SetString(PyExc_ValueError, "Can't allocate memory for message");
+    msg_buf = malloc(msg_len);
+    if (NULL == msg_buf) {
+        PyErr_SetString(PyExc_MemoryError, "Unable to allocate memory for message");
         return 0;
     }
 
-    device_apps__pack(&msg, buf);
+    device_apps__pack(&msg, msg_buf);
 
     pbheader_t pbheader = PBHEADER_INIT;
     pbheader.magic = MAGIC;
     pbheader.type = DEVICE_APPS_TYPE;
-    pbheader.length = len;
+    pbheader.length = msg_len;
 
-    gzwrite(fd, &pbheader, sizeof(pbheader));
-    gzwrite(fd, buf, len);
+    int bpheader_len = sizeof(pbheader);
 
-    free(msg.apps);
-    free(buf);
-    return (len + sizeof(pbheader));
-}
-
-// https://github.com/protobuf-c/protobuf-c/wiki/Examples
-void example() {
-    DeviceApps msg = DEVICE_APPS__INIT;
-    DeviceApps__Device device = DEVICE_APPS__DEVICE__INIT;
-    void *buf;
-    unsigned len;
-
-    char *device_id = "e7e1a50c0ec2747ca56cd9e1558c0d7c";
-    char *device_type = "idfa";
-    device.has_id = 1;
-    device.id.data = (uint8_t*)device_id;
-    device.id.len = strlen(device_id);
-    device.has_type = 1;
-    device.type.data = (uint8_t*)device_type;
-    device.type.len = strlen(device_type);
-    msg.device = &device;
-
-    msg.has_lat = 1;
-    msg.lat = 67.7835424444;
-    msg.has_lon = 1;
-    msg.lon = -22.8044005471;
-
-    msg.n_apps = 3;
-    msg.apps = malloc(sizeof(uint32_t) * msg.n_apps);
-    msg.apps[0] = 42;
-    msg.apps[1] = 43;
-    msg.apps[2] = 44;
-    len = device_apps__get_packed_size(&msg);
-
-    buf = malloc(len);
-    device_apps__pack(&msg, buf);
-
-    fprintf(stderr,"Writing %d serialized bytes\n",len); // See the length of message
-    fwrite(buf, len, 1, stdout); // Write to stdout to allow direct command line piping
+    gzwrite(fd, &pbheader, bpheader_len);
+    gzwrite(fd, msg_buf, msg_len);
 
     free(msg.apps);
-    free(buf);
+    free(msg_buf);
+    return (bpheader_len + msg_len);
 }
 
 // Read iterator of Python dicts
@@ -190,18 +153,96 @@ static PyObject* py_deviceapps_xwrite_pb(PyObject* self, PyObject* args) {
     return PyInt_FromLong(bytes);
 }
 
+int read_from_file(PyObject *dict, DeviceApps *msg_decoded) {
+    PyObject *device_dict = PyDict_New();
+    PyObject *apps_list = NULL;
+
+    if (!msg_decoded->device->has_id) {
+        PyErr_SetString(PyExc_ValueError, "Device id suppose to be a non-empty string");
+        return 0;
+    }
+    PyDict_SetItemString(device_dict, "id", Py_BuildValue("s#", msg_decoded->device->id.data, msg_decoded->device->id.len));
+
+    if (!msg_decoded->device->has_type) {
+        PyErr_SetString(PyExc_ValueError, "Device type suppose to be a non-empty string");
+        return 0;
+    }
+    PyDict_SetItemString(device_dict, "type", Py_BuildValue("s#", msg_decoded->device->type.data, msg_decoded->device->type.len));
+
+    apps_list = PyList_New(0);
+    if (msg_decoded->n_apps) {
+        int i;
+        for (i = 0; i < msg_decoded->n_apps; i++) {
+            PyList_Append(apps_list, Py_BuildValue("i", msg_decoded->apps[i]));
+        }
+    }
+
+    PyDict_SetItemString(dict, "device", device_dict);
+    PyDict_SetItemString(dict, "apps", apps_list);
+    if (msg_decoded->has_lat)
+        PyDict_SetItemString(dict, "lat", Py_BuildValue("d", msg_decoded->lat));
+    if (msg_decoded->has_lon)
+        PyDict_SetItemString(dict, "lon", Py_BuildValue("d", msg_decoded->lon));
+
+    Py_DECREF(device_dict);
+    Py_DECREF(apps_list);
+    return 1;
+}
+
 // Unpack only messages with type == DEVICE_APPS_TYPE
 // Return iterator of Python dicts
 static PyObject* py_deviceapps_xread_pb(PyObject* self, PyObject* args) {
     const char* path;
+    int bpheader_len = sizeof(pbheader_t);
+    void *msg_buf = NULL;
 
-    if (!PyArg_ParseTuple(args, "s", &path))
+    pbheader_t *header_buf = malloc(bpheader_len);
+    if (NULL == header_buf) {
+        PyErr_SetString(PyExc_MemoryError, "Unable to allocate memory for header");
         return NULL;
+    }
+    DeviceApps *msg_decoded = NULL;
+    PyObject *result_dict = NULL;
+
+    if (!PyArg_ParseTuple(args, "s", &path)) {
+        free(header_buf);
+        return NULL;
+    }
 
     printf("Read from: %s\n", path);
-    Py_RETURN_NONE;
-}
+    gzFile fd = gzopen(path, "rb");
+    if (fd == NULL) {
+        PyErr_SetString(PyExc_IOError, "Unable to open file");
+        free(header_buf);
+        return NULL;
+    }
+    PyObject *output_list = PyList_New(0);
+    while (gzread(fd, header_buf, bpheader_len)) {
+        int msg_len = header_buf->length;
+        msg_buf = (uint8_t *) malloc(msg_len);
+        if (NULL == msg_buf) {
+            PyErr_SetString(PyExc_MemoryError, "Unable to allocate memory for message");
+            return NULL;
+        }
+        gzread(fd, msg_buf, msg_len);
+        msg_decoded = device_apps__unpack(NULL, msg_len, msg_buf);
 
+        result_dict = PyDict_New();
+        int status = read_from_file(result_dict, msg_decoded);
+        if (!status) {
+            PyErr_SetString(PyExc_OSError, "Unable to read protobuf message from file");
+            return NULL;
+        }
+        PyList_Append(output_list, result_dict);
+        device_apps__free_unpacked(msg_decoded, NULL);
+        free(msg_buf);
+    }
+
+    free(header_buf);
+    gzclose(fd);
+
+    return PySeqIter_New(output_list);
+}
 
 static PyMethodDef PBMethods[] = {
      {"deviceapps_xwrite_pb", py_deviceapps_xwrite_pb, METH_VARARGS, "Write serialized protobuf to file fro iterator"},
