@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <zlib.h>
 #include "deviceapps.pb-c.h"
 
 #define MAGIC  0xFFFFFFFF

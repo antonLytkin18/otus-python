@@ -12,6 +12,7 @@ RUN yum -y install gcc && \
     yum -y install protobuf-c-devel && \
     yum -y install python-devel && \
     yum -y install python-setuptools && \
+    yum -y install zlib-devel && \
     yum -y install gdb
 
 CMD ["/usr/sbin/init"]
