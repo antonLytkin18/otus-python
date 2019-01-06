@@ -2,17 +2,23 @@ FROM centos:7
 
 MAINTAINER "Anton Lytkin" <a.lytkin@worksolutions.ru>
 
+ADD . /tmp/otus
 WORKDIR /tmp/otus
 
-RUN yum -y install gcc && \
-    yum -y install make && \
-    yum -y install protobuf && \
-    yum -y install protobuf-c && \
-    yum -y install protobuf-c-compiler && \
-    yum -y install protobuf-c-devel && \
-    yum -y install python-devel && \
-    yum -y install python-setuptools && \
-    yum -y install zlib-devel && \
-    yum -y install gdb
+RUN set -xe \
+  && yum install -y gcc \
+                    make \
+                    protobuf \
+                    protobuf-c \
+                    protobuf-c-compiler \
+                    protobuf-c-devel \
+                    python-devel \
+                    python-setuptools \
+                    gdb \
+                    zlib-devel
 
-CMD ["/usr/sbin/init"]
+RUN ulimit -c unlimited
+
+RUN protoc-c --c_out=. deviceapps.proto
+
+RUN python setup.py test
