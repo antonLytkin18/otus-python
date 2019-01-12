@@ -280,7 +280,7 @@ var (
 )
 
 func init() {
-	flag.IntVar(&workers, "workers", 10, "number of insert workers")
+	flag.IntVar(&workers, "workers", 10, "parse workers count")
 	flag.IntVar(&bufferSize, "buffer-size", 10, "buffer size")
 	flag.StringVar(&pattern, "pattern", "data/[^.]*.tsv.gz", "filename pattern to parse from")
 	flag.IntVar(&maxTries, "max-tries", 3, "max tries")
