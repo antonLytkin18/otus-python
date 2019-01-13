@@ -31,15 +31,13 @@ class Server:
     def create_request(self, client_socket):
         request_bytes = b''
         expected_size = 0
-        request = None
         while len(request_bytes) >= expected_size:
             chunk_bytes = client_socket.recv(self.CHUNK_SIZE)
             request_bytes += chunk_bytes
-            request = Request(request_bytes)
-            if request.is_complete():
+            if Request.is_length_exceeded(request_bytes) or Request.is_complete(request_bytes):
                 break
             expected_size += self.CHUNK_SIZE
-        return request
+        return Request(request_bytes)
 
     def serve_forever(self):
         while True:

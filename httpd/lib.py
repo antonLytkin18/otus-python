@@ -11,6 +11,9 @@ ENCODING = 'utf-8'
 
 class Request:
 
+    MAX_LENGTH = 1000
+
+    _request_data = ''
     _method = None
     _query_string = ''
     _query_params = ''
@@ -19,9 +22,9 @@ class Request:
     _headers = []
 
     def __init__(self, request_bytes):
-        self._request_data = request_bytes.decode(ENCODING)
-        if not self.is_complete():
+        if self.is_length_exceeded(request_bytes) or not self.is_complete(request_bytes):
             return
+        self._request_data = request_bytes.decode(ENCODING)
         request_string, headers_string = self._request_data.split(CLRF, 1)
         self._method, self._query_string, self._http = request_string.split(' ')
         params = self._query_string.split('?', 1)
@@ -29,19 +32,24 @@ class Request:
         self._query_params = params[1] if len(params) > 1 else ''
         self._headers = headers_string.splitlines()[:-1]
 
-    def is_complete(self):
-        return CLRF * 2 in self._request_data
+    @staticmethod
+    def is_complete(request_bytes):
+        return CLRF * 2 in request_bytes.decode(ENCODING)
+
+    @staticmethod
+    def is_length_exceeded(request_bytes):
+        return len(request_bytes.decode(ENCODING)) > Request.MAX_LENGTH
 
     @property
-    def get_request_data(self):
+    def request_data(self):
         return self._request_data
 
     @property
-    def get_path(self):
+    def path(self):
         return self._path
 
     @property
-    def get_method(self):
+    def method(self):
         return self._method
 
 
@@ -66,10 +74,10 @@ class Response:
 
     def __init__(self, request, document_root):
         self._request = request
-        if not self._request.get_request_data:
+        if not self._request.request_data:
             self._status = self.BAD_REQUEST
             return
-        if self._request.get_method not in self._allowed_methods:
+        if self._request.method not in self._allowed_methods:
             self._status = self.NOT_ALLOWED
             return
         self._file_path = self.build_file_path(document_root)
@@ -77,13 +85,14 @@ class Response:
             self._status = self.NOT_FOUND
             return
         self._content_type = self.get_content_type()
+        if request.method == 'HEAD':
+            self._content_length = len(self.get_content())
+            return
         self._body = self.get_content()
         self._content_length = len(self._body)
-        if self.is_head_request:
-            self.clear_body()
 
     def build_file_path(self, document_root):
-        path = self._request.get_path
+        path = self._request.path
         path += 'index.html' if path.endswith('/') else ''
         root = document_root if document_root else os.path.dirname(os.path.abspath(__file__))
         return root + os.path.normpath(path)
@@ -95,14 +104,6 @@ class Response:
     def get_content_type(self):
         content_type, encoding = mimetypes.guess_type(self._file_path)
         return content_type
-
-    def clear_body(self):
-        self._body = b''
-        return self
-
-    @property
-    def is_head_request(self):
-        return self._request.get_method == 'HEAD'
 
     def get_headers(self):
         return [
